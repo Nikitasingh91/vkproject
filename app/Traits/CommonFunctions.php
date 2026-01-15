@@ -7,7 +7,6 @@ use App\Models\GalleryItem;
 use App\Mail\ContactUsEMail;
 use App\Models\ContactUsModel;
 use App\Models\WebSiteElements;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Intervention\Image\Facades\Image;
@@ -16,18 +15,18 @@ use Illuminate\Foundation\Http\FormRequest;
 trait CommonFunctions{
 
     public function reportException(Exception $exception){
-        Log::alert(json_encode([
+        dd([
             "message"=>$exception->getMessage(),
             "File"=>$exception->getFile(),
             "Code"=>$exception->getCode(),
             "Trace as string"=>$exception->getTraceAsString()
-        ]));
+        ]);
     }
 
     public function uploadLocalFile(FormRequest $fileObject,$key_name,$upload_path,$file_name = "",int $height = null,int $width = null):array{
         try{
             $uploadFile = $fileObject->file($key_name);
-
+             
             $fileName = $uploadFile->getClientOriginalName();
 
             $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
@@ -39,7 +38,7 @@ trait CommonFunctions{
             if($height && $width){
                 $newName = $upload_path.$fileNameWithoutExtension."img_$timeString"."_cropped.$fileExtension";
                 $resizeImage = Image::make(public_path().$upload_path.$fileName);
-
+                 
                 $resizeImage->resize($width,$height,function($constraint){
                     $constraint->aspectRatio();
                 })->crop($width,$height)->save(public_path().$newName,100,$fileExtension);
@@ -55,7 +54,7 @@ trait CommonFunctions{
         }catch(Exception $exception){
             $this->reportException($exception);
             $return = ["status"=>false,"message"=>$exception->getMessage(),"data"=>$exception->getMessage()];
-        }
+        } 
         return $return;
     }
 
@@ -67,22 +66,28 @@ trait CommonFunctions{
     }
 
     public function getCachedGalleryItems(){
-        return Cache::rememberForever('galleryImages', function () {
-            return GalleryItem::where([
+        $galleryImages = Cache::get("galleryImages");
+        if(empty($galleryImages)){
+            
+            $galleryImages = GalleryItem::where([
                 [GalleryItem::STATUS,1],
                 [GalleryItem::VIEW_STATUS,GalleryItem::VIEW_STATUS_VISIBLE]
             ])->select(GalleryItem::LOCAL_IMAGE,
-            GalleryItem::IMAGE_LINK,GalleryItem::ALTERNATE_TEXT,GalleryItem::TITLE,GalleryItem::DESCRIPTION,
-            GalleryItem::FILTER_CATEGORY)
-            ->whereNULL(GalleryItem::VIDEO_LINK)
-            ->whereNULL(GalleryItem::LOCAL_VIDEO)->orderBy(GalleryItem::POSITION,'asc')->get();
-        });
+            GalleryItem::IMAGE_LINK,GalleryItem::ALTERNATE_TEXT,GalleryItem::TITLE)
+            ->orderBy(GalleryItem::POSITION,'asc')->get();
+            if(count($galleryImages)){
+                Cache::rememberForever('galleryImages', function () use($galleryImages) {
+                    return $galleryImages;
+                });
+            }
+        }
+        return $galleryImages;
     }
 
     public function sendContactUsEmail(ContactUsModel $contactUsModel){
         try{
-            Mail::to("travel@torna.in")
-            ->cc(["torna.in@gmail.com"])->send(new ContactUsEMail,
+            Mail::to("travel@grstic.com")
+            ->cc(["grstic.com@gmail.com"])->send(new ContactUsEMail,
             $contactUsModel->toArray());
         }catch(Exception $exception){
             report($exception);
@@ -101,10 +106,14 @@ trait CommonFunctions{
         }
         return request()->ip(); // it will return the server IP if the client IP is not found using this method.
     }
+
+    public function addDiv($item,$class="row",$id=""){
+        return '<div class="'.$class.'" id="'.$id.'">'.$item.'</div>';
+    }
+
     public function forgetWebSiteElements(){
         Cache::forget('webSiteElements');
     }
-
     public function getWebSiteElements(){
         return Cache::rememberForever('webSiteElements', function () {
             return WebSiteElements::where(WebSiteElements::STATUS,1)->get();
@@ -113,4 +122,29 @@ trait CommonFunctions{
     public function forgetSlides(){
         Cache::forget('slides');
     }
+    public function getModal(int $id,string $data,$buttontitle,$modalTitle = ""){
+        return '
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal'.$id.'">
+  '.$buttontitle.'
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal'.$id.'" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">'.$modalTitle.'</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        '.$data.'
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>';
+    }
+
 }

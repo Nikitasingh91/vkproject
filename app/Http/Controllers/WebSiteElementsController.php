@@ -37,6 +37,8 @@ class WebSiteElementsController extends Controller
         "value_content",
         "contact_us_image",
         "contact_us_content",
+        "boucher_pdf",
+        "quality_policy"
     ];
     public function addWebSiteElements()
     {
@@ -84,16 +86,27 @@ class WebSiteElementsController extends Controller
             } else {
                 $check->{WebSiteElements::ELEMENT} = $requestData[WebSiteElements::ELEMENT];
                 $check->{WebSiteElements::ELEMENT_TYPE} = $requestData[WebSiteElements::ELEMENT_TYPE];
-                if ($requestData[WebSiteElements::ELEMENT_TYPE] == "Image") {
-                    $fileUpload = $this->uploadLocalFile($request, "element_details_image", "/website/uploads/WesiteElements/");
-                    if ($fileUpload["status"]) {
-                        $check->{WebSiteElements::ELEMENT_DETAILS} = $fileUpload["data"];
-                    } else {
-                        return $fileUpload;
-                    }
-                } else {
-                    $check->{WebSiteElements::ELEMENT_DETAILS} = $requestData["element_details_text"];
-                }
+              if ($requestData[WebSiteElements::ELEMENT_TYPE] == "Image" || $requestData[WebSiteElements::ELEMENT_TYPE] == "PDF") {
+
+    // choose correct folder
+    $folder = $requestData[WebSiteElements::ELEMENT_TYPE] == "PDF"
+        ? "/website/uploads/WebsitePDF/"
+        : "/website/uploads/WesiteElements/";
+
+    // Use the new name element_details_file
+    $fileUpload = $this->uploadLocalFile($request, "element_details_file", $folder);
+
+    if ($fileUpload["status"]) {
+        $check->{WebSiteElements::ELEMENT_DETAILS} = $fileUpload["data"];
+    } else {
+        return $fileUpload;
+    }
+
+} else {
+    // TEXT
+    $check->{WebSiteElements::ELEMENT_DETAILS} = $requestData["element_details_text"];
+}
+
                 $check->save();
                 $this->forgetWebSiteElements();
                 $return = ["status" => true, "message" => "Details updated", "data" => null];
@@ -124,16 +137,27 @@ class WebSiteElementsController extends Controller
             $check = new WebSiteElements();
             $check->{WebSiteElements::ELEMENT} = $requestData[WebSiteElements::ELEMENT];
             $check->{WebSiteElements::ELEMENT_TYPE} = $requestData[WebSiteElements::ELEMENT_TYPE];
-            if ($requestData[WebSiteElements::ELEMENT_TYPE] == "Image") {
-                $fileUpload = $this->uploadLocalFile($request, "element_details_image", "/website/uploads/WesiteElements/");
-                if ($fileUpload["status"]) {
-                    $check->{WebSiteElements::ELEMENT_DETAILS} = $fileUpload["data"];
-                } else {
-                    return $fileUpload;
-                }
-            } else {
-                $check->{WebSiteElements::ELEMENT_DETAILS} = $requestData["element_details_text"];
-            }
+            if ($requestData[WebSiteElements::ELEMENT_TYPE] == "Image" || $requestData[WebSiteElements::ELEMENT_TYPE] == "PDF") {
+
+    // choose correct folder
+    $folder = $requestData[WebSiteElements::ELEMENT_TYPE] == "PDF"
+        ? "/website/uploads/WebsitePDF/"
+        : "/website/uploads/WesiteElements/";
+
+    // Use the new name element_details_file
+    $fileUpload = $this->uploadLocalFile($request, "element_details_file", $folder);
+
+    if ($fileUpload["status"]) {
+        $check->{WebSiteElements::ELEMENT_DETAILS} = $fileUpload["data"];
+    } else {
+        return $fileUpload;
+    }
+
+} else {
+    // TEXT
+    $check->{WebSiteElements::ELEMENT_DETAILS} = $requestData["element_details_text"];
+}
+
             $this->forgetWebSiteElements();
             $check->save();
             $return = ["status" => true, "message" => "Saved successfully.", "data" => null];

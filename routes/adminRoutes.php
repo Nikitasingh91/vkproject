@@ -10,9 +10,9 @@ use App\Http\Controllers\WebSiteElementsController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\ClientController;
 
-
-
-
+use App\Http\Controllers\ContactUsController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\VerticalController;
 Route::get("login",[AdminController::class,"Login"])->name("login");
 Route::get("logout",[AdminCOntroller::class,"logout"])->name("logout");
 Route::post("AdminUserLogin",[AdminController::class,"AdminLoginUser"])->name("AdminLogin");
@@ -40,7 +40,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post("save-Slide", [SliderController::class, "saveSlide"])->name("saveSlide");
     Route::post("slider-data", [SliderController::class, "sliderData"])->name("sliderData");
 
-      
+       Route::get("blog-admin", [BlogController::class, "blogSlider"])->name("blogSlider");
+    Route::post("save-blog", [BlogController::class, "saveBlog"])->name("saveBlog");
+    Route::post("blog-data", [BlogController::class, "blogData"])->name("blogData");
+
     Route::get("products-admin", [ServicesController::class, "servicesSlider"])->name("servicesSlider");
     Route::post("products", [ServicesController::class, "servicesSaveSlide"])->name("servicesSaveSlide");
     Route::post("products-data", [ServicesController::class, "servicesData"])->name("servicesData");
@@ -60,8 +63,22 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/clients-data', [ClientController::class, 'clientsDataTable'])->name('clientsDataTable');
 Route::post('/add-client', [ClientController::class, 'addClient'])->name('addClient');
 
+Route::get("manage-verticals", [VerticalController::class, "manageVerticals"])
+    ->name("manageVerticals");
+
+Route::post("verticals-data", [VerticalController::class, "verticalsData"])
+    ->name("verticalsData");
+
+Route::post("save-vertical", [VerticalController::class, "saveVertical"])
+    ->name("saveVertical");
+Route::get('/vertical/{slug}', [VerticalController::class, 'show']);
+
     Route::get("contact-us-data", function () {
     return view("HomePage.ContactUsdata");
 })->name("ContactUsData");
+   Route::get("contact-us-data", [ContactUsController::class, "manageContactUs"])->name("manageContactUs");
+     
+    // POST route for DataTables Ajax
+    Route::post("contact-us-data", [ContactUsController::class, "ContactUsData"])->name("ContactUsData");
 
 });

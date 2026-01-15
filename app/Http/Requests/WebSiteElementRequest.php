@@ -31,9 +31,10 @@ class WebSiteElementRequest extends FormRequest
             "id"=>"bail|required_if:action,update,enable,disable|nullable|exists:website_elements,id",
             "action"=>"bail|required|in:insert,update,enable,disable",
             "element"=>"bail|required_if:action,insert,update",
-            "element_type"=>"bail|required_if:action,insert,update|in:Text,Image",
-            "element_details_text"=>"bail|required_if:element_type,Text",
-            "element_details_image"=>"bail|file|image|max:2048|required_if:element_type,Image"
+            "element_type" => "bail|required_if:action,insert,update|in:Text,Image,PDF",
+
+            "element_details_file" => "bail|required_if:element_type,Image,PDF|file|mimes:jpg,jpeg,png,webp,pdf|max:5120",
+  
         ];
     }
     /**
